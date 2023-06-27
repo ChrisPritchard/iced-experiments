@@ -57,3 +57,37 @@ each row is a series of buttons:
     1 2 3 add
     - 0 . sub
     equals
+
+## How does math on a calculator work?
+
+scen 1:
+
+    press op (x) without number becomes 0 x 
+    press equals becomes 0 x 0, doesnt repeat
+
+scen 2:
+
+    press number
+    press equals just equals number
+
+scen 3:
+
+    press number
+    press op (x)
+    press equals becomes n x n = res
+    press equals again becomes res x n = res2
+
+scen 4:
+
+    press number
+    press op
+    press number2
+    press equals becomes n x n2 = res
+    press equals again becomes res x n2 = res2
+
+its almost like a very small queue...
+    add number
+    add op
+    add number
+    = calcs res, pops top, and adds res
+    op calcs res, pops all, adds res, adds op
