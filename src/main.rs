@@ -1,4 +1,4 @@
-use iced::{Sandbox, widget::{column, text, container, row, button}, Settings, Length, alignment::{Horizontal, Vertical}};
+use iced::{Sandbox, widget::{column, text, container, row, button, Button, Text}, Settings, Length, alignment::{Horizontal, Vertical}};
 
 #[derive(Debug, Clone)]
 enum CalcMessage {
@@ -67,44 +67,56 @@ impl Sandbox for CalcState {
                 if self.current_op.is_none() {
                     return;
                 }
-                let op = self.current_op.as_ref().unwrap();
-                let number: f64 = self.displayed.parse().unwrap();
             }
         }    
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message> {
 
+        fn centred_text(label: &str) -> Text {
+            text(label).horizontal_alignment(Horizontal::Center).vertical_alignment(Vertical::Center)
+        }
+
+        fn pad_button(label: &str, msg: CalcMessage) -> Button<CalcMessage> {
+            button(centred_text(label))
+                .width(50)
+                .height(60)
+                .on_press(msg)
+        }
+
         let content = 
             column![
                 text("formula"),
-                text("displayed"),
+                text(&self.displayed).size(20),
                 row![
-                    button("7").on_press(CalcMessage::Number(7)),
-                    button("8").on_press(CalcMessage::Number(8)),
-                    button("9").on_press(CalcMessage::Number(9)),
-                    button("÷").on_press(CalcMessage::Op(CalcOp::Div)),
-                ],
+                    pad_button("7", CalcMessage::Number(7)),
+                    pad_button("8", CalcMessage::Number(8)),
+                    pad_button("9", CalcMessage::Number(9)),
+                    pad_button("÷", CalcMessage::Op(CalcOp::Div)),
+                ].spacing(10),
                 row![
-                    button("4").on_press(CalcMessage::Number(4)),
-                    button("5").on_press(CalcMessage::Number(5)),
-                    button("6").on_press(CalcMessage::Number(6)),
-                    button("×").on_press(CalcMessage::Op(CalcOp::Mul)),
-                ],
+                    pad_button("4", CalcMessage::Number(4)),
+                    pad_button("5", CalcMessage::Number(5)),
+                    pad_button("6", CalcMessage::Number(6)),
+                    pad_button("×", CalcMessage::Op(CalcOp::Mul)),
+                ].spacing(10),
                 row![
-                    button("1").on_press(CalcMessage::Number(1)),
-                    button("2").on_press(CalcMessage::Number(2)),
-                    button("3").on_press(CalcMessage::Number(3)),
-                    button("+").on_press(CalcMessage::Op(CalcOp::Add)),
-                ],
+                    pad_button("1", CalcMessage::Number(1)),
+                    pad_button("2", CalcMessage::Number(2)),
+                    pad_button("3", CalcMessage::Number(3)),
+                    pad_button("+", CalcMessage::Op(CalcOp::Add)),
+                ].spacing(10),
                 row![
-                    button("±").on_press(CalcMessage::Negate),
-                    button("0").on_press(CalcMessage::Number(0)),
-                    button(".").on_press(CalcMessage::Fraction),
-                    button("-").on_press(CalcMessage::Op(CalcOp::Sub)),
-                ],
-                button("=").on_press(CalcMessage::Eval),
-            ];
+                    pad_button("±", CalcMessage::Negate),
+                    pad_button("0", CalcMessage::Number(0)),
+                    pad_button(".", CalcMessage::Fraction),
+                    pad_button("-", CalcMessage::Op(CalcOp::Sub)),
+                ].spacing(10),
+                button(centred_text("="))
+                    .width(230)
+                    .height(60)
+                    .on_press(CalcMessage::Eval),
+            ].spacing(10);
 
         container(content)
             .width(Length::Fill)
