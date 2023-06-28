@@ -77,8 +77,6 @@ scen 3:
     press equals (set right to left) becomes n x n = res (set left to res)
     press equals again becomes res x n = res2 
 
-    
-
 scen 4:
 
     press number (set left)

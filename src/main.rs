@@ -1,5 +1,14 @@
 use iced::{Sandbox, widget::{column, text, container, row, button, Button, Text}, Settings, Length, alignment::{Horizontal, Vertical}};
 
+struct CalcState {
+    // formula: String,
+    displayed: String,
+    left: Option<f64>,
+    op: Option<CalcOp>,
+    overwrite_display: bool,
+    right: Option<f64>,
+}
+
 #[derive(Debug, Clone)]
 enum CalcMessage {
     Number(u32),
@@ -11,15 +20,6 @@ enum CalcMessage {
 #[derive(Debug, Clone)]
 enum CalcOp {
     Add, Sub, Mul, Div
-}
-
-struct CalcState {
-    // formula: String,
-    displayed: String,
-    left: Option<f64>,
-    op: Option<CalcOp>,
-    overwrite_display: bool,
-    right: Option<f64>,
 }
 
 impl Sandbox for CalcState {
