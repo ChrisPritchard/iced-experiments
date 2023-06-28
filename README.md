@@ -67,27 +67,25 @@ scen 1:
 
 scen 2:
 
-    press number
-    press equals just equals number
+    press number (set left)
+    press equals just equals number (set op to =)
 
 scen 3:
 
-    press number
-    press op (x)
-    press equals becomes n x n = res
-    press equals again becomes res x n = res2
+    press number (set left)
+    press op (x) (set op)
+    press equals (set right to left) becomes n x n = res (set left to res)
+    press equals again becomes res x n = res2 
+
+    
 
 scen 4:
 
-    press number
-    press op
-    press number2
+    press number (set left)
+    press op (set op)
+    press number2 (set right)
     press equals becomes n x n2 = res
     press equals again becomes res x n2 = res2
 
-its almost like a very small queue...
-    add number
-    add op
-    add number
-    = calcs res, pops top, and adds res
-    op calcs res, pops all, adds res, adds op
+    require left, op and right.
+    when evaluating, print result and set left to result.

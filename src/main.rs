@@ -14,10 +14,12 @@ enum CalcOp {
 }
 
 struct CalcState {
+    // formula: String,
     displayed: String,
-    current_op: Option<CalcOp>,
-    op_just_selected: bool,
-    last_entered: Option<f64>
+    left: Option<f64>,
+    op: Option<CalcOp>,
+    overwrite_display: bool,
+    right: Option<f64>,
 }
 
 impl Sandbox for CalcState {
@@ -25,31 +27,37 @@ impl Sandbox for CalcState {
 
     fn new() -> Self {
         Self {
+            // formula: "".into(),
             displayed: "0".into(),
-            current_op: None,
-            op_just_selected: false,
-            last_entered: None
+            left: None,
+            op: None,
+            overwrite_display: false,
+            right: None,
         }
     }
 
     fn title(&self) -> String { "Iced Calc".into() }
 
     fn update(&mut self, message: Self::Message) {
+
+        fn calc_result(a: f64, b: f64, op: &CalcOp) -> f64 {
+            match op {
+                CalcOp::Add => a + b,
+                CalcOp::Sub => a - b,
+                CalcOp::Mul => a * b,
+                CalcOp::Div => a / b,
+            }
+        }
+
         match message {
-            CalcMessage::Op(op) => { 
-                self.current_op = Some(op);
-                self.op_just_selected = true;
-            },
+            // displayed is used to track the current number being entered, before it is set as part of the formula, operation etc
             CalcMessage::Number(n) => {
-                if self.displayed == "0" || self.op_just_selected {
-                    if self.op_just_selected {
-                        self.last_entered = Some(self.displayed.parse().unwrap());
-                    }
+                if self.displayed == "0" || self.overwrite_display {
                     self.displayed = format!("{n}");
+                    self.overwrite_display = false;
                 } else {
                     self.displayed = format!("{}{n}", self.displayed);
                 }
-                self.op_just_selected = false;
             },
             CalcMessage::Negate => {
                 if self.displayed.starts_with("-") {
@@ -63,10 +71,35 @@ impl Sandbox for CalcState {
                     self.displayed = format!("{}.", self.displayed);
                 }
             },
+            // op and eval finally parse numbers into positions, and possibly calculate results
+            CalcMessage::Op(op) => { 
+                let number: f64 = self.displayed.parse().unwrap();
+                if self.left.is_none() {
+                    self.left = Some(number);
+                } else if self.right.is_some() {
+                    let result = calc_result(self.left.unwrap(), self.right.unwrap(), &op); // calculate prior op
+                    self.displayed = result.to_string();
+                    self.left = Some(result);
+                }
+                self.op = Some(op);
+                self.overwrite_display = true;
+            },
             CalcMessage::Eval => {
-                if self.current_op.is_none() {
+                let number: f64 = self.displayed.parse().unwrap();
+                if self.op.is_none() {
                     return;
                 }
+                if self.left.is_none() {
+                    self.left = Some(number);
+                    return;
+                }
+                if self.right.is_none() {
+                    self.right = Some(number);
+                }
+                let result = calc_result(self.left.unwrap(), self.right.unwrap(), self.op.as_ref().unwrap());
+                self.displayed = result.to_string();
+                self.left = Some(result);
+                self.overwrite_display = true;
             }
         }    
     }
