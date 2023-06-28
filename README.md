@@ -89,4 +89,4 @@ scen 4:
     when evaluating, print result and set left to result.
 
 
-is it basically result op number? and if number isnt defined (e.g. result op) then number is set to result. And if there isn't a result yet, then the first number defines the result?
+is it basically 'result op number'? and if number isnt defined (e.g. result op) then number is set to result. And if there isn't a result yet, then the first number defines the result?

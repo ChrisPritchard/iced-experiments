@@ -1,12 +1,11 @@
 use iced::{Sandbox, widget::{column, text, container, row, button, Button, Text}, Settings, Length, alignment::{Horizontal, Vertical}};
 
 struct CalcState {
-    // formula: String,
+    formula: String,
     displayed: String,
     left: Option<f64>,
     op: Option<CalcOp>,
     overwrite_display: bool,
-    right: Option<f64>,
 }
 
 #[derive(Debug, Clone)]
@@ -27,12 +26,11 @@ impl Sandbox for CalcState {
 
     fn new() -> Self {
         Self {
-            // formula: "".into(),
+            formula: "".into(),
             displayed: "0".into(),
             left: None,
             op: None,
             overwrite_display: false,
-            right: None,
         }
     }
 
@@ -46,6 +44,15 @@ impl Sandbox for CalcState {
                 CalcOp::Sub => a - b,
                 CalcOp::Mul => a * b,
                 CalcOp::Div => a / b,
+            }
+        }
+
+        fn symbol_for(op: &CalcOp) -> String {
+            match op {
+                CalcOp::Add => "+".into(),
+                CalcOp::Sub => "-".into(),
+                CalcOp::Mul => "×".into(),
+                CalcOp::Div => "÷".into(),
             }
         }
 
@@ -76,27 +83,20 @@ impl Sandbox for CalcState {
                 let number: f64 = self.displayed.parse().unwrap();
                 if self.left.is_none() {
                     self.left = Some(number);
-                } else if self.right.is_some() {
-                    let result = calc_result(self.left.unwrap(), self.right.unwrap(), &op); // calculate prior op
-                    self.displayed = result.to_string();
-                    self.left = Some(result);
                 }
+                self.formula = format!("{} {}", number, symbol_for(&op));
+
                 self.op = Some(op);
                 self.overwrite_display = true;
             },
             CalcMessage::Eval => {
-                let number: f64 = self.displayed.parse().unwrap();
                 if self.op.is_none() {
                     return;
                 }
-                if self.left.is_none() {
-                    self.left = Some(number);
-                    return;
-                }
-                if self.right.is_none() {
-                    self.right = Some(number);
-                }
-                let result = calc_result(self.left.unwrap(), self.right.unwrap(), self.op.as_ref().unwrap());
+                let number: f64 = self.displayed.parse().unwrap();
+                self.formula = format!("{} {} {number}", self.left.unwrap(), symbol_for(self.op.as_ref().unwrap()));
+
+                let result = calc_result(self.left.unwrap(), number, self.op.as_ref().unwrap());
                 self.displayed = result.to_string();
                 self.left = Some(result);
                 self.overwrite_display = true;
@@ -119,8 +119,8 @@ impl Sandbox for CalcState {
 
         let content = 
             column![
-                text("formula"),
-                text(&self.displayed).size(20),
+                text(&self.formula).height(20).size(18),
+                text(&self.displayed).size(30),
                 row![
                     pad_button("7", CalcMessage::Number(7)),
                     pad_button("8", CalcMessage::Number(8)),
@@ -155,7 +155,9 @@ impl Sandbox for CalcState {
             .width(Length::Fill)
             .height(Length::Fill)
             .align_x(Horizontal::Center)
-            .align_y(Vertical::Center).into()
+            .align_y(Vertical::Center)
+            .padding(10)
+            .into()
     }
 }
 
