@@ -1,4 +1,4 @@
-use iced::{Sandbox, Settings, widget::{text_input, row, column, text, container}, Element, Length};
+use iced::{Sandbox, Settings, widget::{text_input, row, column, text, container}, Element, Length, Color, Theme};
 
 
 struct TodoList {
@@ -73,24 +73,46 @@ impl Sandbox for TodoList {
 
         let selected = self.being_edited.unwrap_or(0);
 
-        let mut todo: Vec<Element<TodoMessage>> = vec![text("TODO").into()];
-        todo.extend(self.tasks.iter().filter_map(|t| if t.status == Status::Todo { Some(task_view(t, t.id == selected)) } else { None }));
-        let mut doing: Vec<Element<TodoMessage>> = vec![text("DOING").into()];
-        doing.extend(self.tasks.iter().filter_map(|t| if t.status == Status::Doing { Some(task_view(t, t.id == selected)) } else { None }));
-        let mut done: Vec<Element<TodoMessage>> = vec![text("DONE").into()];
-        done.extend(self.tasks.iter().filter_map(|t| if t.status == Status::Done { Some(task_view(t, t.id == selected)) } else { None }));
+        pub fn task_column_style(theme: &Theme) -> container::Appearance {
+            let palette = theme.extended_palette();
+    
+            container::Appearance {
+                border_width: 2.0,
+                border_color: palette.primary.strong.color,
+                ..Default::default()
+            }
+        }
 
-        let content = 
-            row(vec![
-                column(todo).width(Length::FillPortion(1)).into(),
-                column(doing).width(Length::FillPortion(1)).into(),
-                column(done).width(Length::FillPortion(1)).into(),
-            ]);
+        fn task_column(this: &TodoList, status: Status, selected: u32) -> Element<TodoMessage> {
+            let tasks: Vec<Element<TodoMessage>> = 
+                this.tasks
+                .iter()
+                .filter_map(|t| 
+                        if t.status == status { 
+                            Some(task_view(t, t.id == selected)) } else { None })
+                .collect();
+            let heading = match status {
+                Status::Todo => "TODO",
+                Status::Doing => "DOING",
+                Status::Done => "DONE",
+            };
+            let mut tasks_items: Vec<Element<TodoMessage>> = vec![text(heading).into()];
+            tasks_items.extend(tasks);
 
-        // three columns, evenly spaced, with headings
-        // tasks as boxes within
-        // if task is being edited, render with editor
-        
+            let arrangement =
+                column(tasks_items)
+                    .width(Length::FillPortion(1));
+
+            container(arrangement)
+                .style(task_column_style)
+                .into()
+        }
+
+        let todo = task_column(self, Status::Todo, selected);
+        let doing = task_column(self, Status::Doing, selected);
+        let done = task_column(self, Status::Done, selected);
+
+        let content = row(vec![todo, doing, done]);
         container(content)
             .width(Length::Fill)
             .height(Length::Fill)
