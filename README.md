@@ -90,3 +90,4 @@ scen 4:
 
 
 is it basically 'result op number'? and if number isnt defined (e.g. result op) then number is set to result. And if there isn't a result yet, then the first number defines the result?
+need to keep the last 'entered' number, or the last number that wasn't the result of the previous calculation, so subsequent equals can use this
