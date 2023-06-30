@@ -104,7 +104,7 @@ impl Sandbox for TodoList {
                     .width(Length::FillPortion(1));
 
             container(arrangement)
-                .style(task_column_style)
+                .style(iced::theme::Container::Custom(task_column_style))
                 .into()
         }
 
