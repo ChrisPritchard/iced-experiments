@@ -1,3 +1,4 @@
+use iced::widget::container::Appearance;
 use iced::{Sandbox, Settings, Element, Length, Theme};
 use iced::widget::{text_input, row, column, text, container};
 
@@ -19,16 +20,6 @@ struct Task {
 
 #[derive(Debug, Clone)]
 enum TodoMessage {
-}
-
-fn task_column_style(theme: &Theme) -> container::Appearance {
-    let palette = theme.extended_palette();
-
-    container::Appearance {
-        border_width: 4.,
-        border_color: palette.primary.strong.color,
-        ..Default::default()
-    }
 }
 
 impl Sandbox for TodoList {
@@ -72,13 +63,26 @@ impl Sandbox for TodoList {
     fn view(&self) -> iced::Element<TodoMessage> {
 
         fn task_view(task: &Task, is_selected: bool) -> iced::Element<TodoMessage> {
-            if is_selected {
-                let input = text_input("task description...".into(), &task.description.to_owned());
-                container(input).into()
-            } else {
-                let text = text(&task.description);
-                container(text).into()
-            }
+            let style = |theme: &Theme| -> Appearance {
+                let palette = theme.extended_palette();
+                container::Appearance {
+                    border_width: 4.,
+                    border_color: palette.primary.strong.color,
+                    ..Default::default()
+                }
+            } as for<'r> fn(&'r _) -> _;
+
+            let content: iced::Element<TodoMessage> = 
+                if is_selected {
+                    text_input("task description...".into(), &task.description.to_owned()).into()
+                } else {
+                    text(&task.description).into()
+                };
+            container(content)
+                .width(Length::Fill)
+                .padding(5)
+                .style(style)
+                .into()
         }
 
         let selected = self.being_edited.unwrap_or(0);
@@ -100,10 +104,19 @@ impl Sandbox for TodoList {
             tasks_items.extend(tasks);
 
             let arrangement =
-                column(tasks_items);
+                column(tasks_items).spacing(10);
+
+            let style = |theme: &Theme| -> Appearance {
+                let palette = theme.extended_palette();
+                container::Appearance {
+                    border_width: 2.,
+                    border_color: palette.primary.strong.color,
+                    ..Default::default()
+                }
+            } as for<'r> fn(&'r _) -> _;
 
             container(arrangement)
-                .style(task_column_style as for<'r> fn(&'r _) -> _)
+                .style(style)
                 .width(Length::FillPortion(1))
                 .height(Length::Fill)
                 .padding(10)
