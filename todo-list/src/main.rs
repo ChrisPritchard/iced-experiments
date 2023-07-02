@@ -1,5 +1,5 @@
-use iced::{Sandbox, Settings, widget::{text_input, row, column, text, container}, Element, Length, Color, Theme};
-
+use iced::{Sandbox, Settings, Element, Length, Theme};
+use iced::widget::{text_input, row, column, text, container};
 
 struct TodoList {
     tasks: Vec<Task>,
@@ -19,6 +19,16 @@ struct Task {
 
 #[derive(Debug, Clone)]
 enum TodoMessage {
+}
+
+fn task_column_style(theme: &Theme) -> container::Appearance {
+    let palette = theme.extended_palette();
+
+    container::Appearance {
+        border_width: 4.,
+        border_color: palette.primary.strong.color,
+        ..Default::default()
+    }
 }
 
 impl Sandbox for TodoList {
@@ -73,16 +83,6 @@ impl Sandbox for TodoList {
 
         let selected = self.being_edited.unwrap_or(0);
 
-        pub fn task_column_style(theme: &Theme) -> container::Appearance {
-            let palette = theme.extended_palette();
-    
-            container::Appearance {
-                border_width: 2.0,
-                border_color: palette.primary.strong.color,
-                ..Default::default()
-            }
-        }
-
         fn task_column(this: &TodoList, status: Status, selected: u32) -> Element<TodoMessage> {
             let tasks: Vec<Element<TodoMessage>> = 
                 this.tasks
@@ -100,11 +100,13 @@ impl Sandbox for TodoList {
             tasks_items.extend(tasks);
 
             let arrangement =
-                column(tasks_items)
-                    .width(Length::FillPortion(1));
+                column(tasks_items);
 
             container(arrangement)
-                .style(iced::theme::Container::Custom(task_column_style))
+                .style(task_column_style as for<'r> fn(&'r _) -> _)
+                .width(Length::FillPortion(1))
+                .height(Length::Fill)
+                .padding(10)
                 .into()
         }
 
@@ -112,11 +114,11 @@ impl Sandbox for TodoList {
         let doing = task_column(self, Status::Doing, selected);
         let done = task_column(self, Status::Done, selected);
 
-        let content = row(vec![todo, doing, done]);
+        let content = row(vec![todo, doing, done]).spacing(10);
         container(content)
             .width(Length::Fill)
             .height(Length::Fill)
-            .padding(10)
+            .padding(20)
             .into()
     }
 }
