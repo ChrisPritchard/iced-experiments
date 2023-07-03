@@ -15,7 +15,7 @@ Most complicated part was applying style to a container:
 - `.style` must accept something that matches `Fn(&Theme) -> Container::Appearance`
 - so passing a `fn task_style(theme: &Theme) -> Appearance {}` *should* work at first glance
 - or a `let s = |t: &Theme| -> Appearance {}`...
-- however they don't, becuase in rust these don't auto-coerce to a generic '`Fn(&Theme) -> Container::Appearance`' type, but rather have a specific generated type for their specific value (e.g. type of task_style whatever in the first example
+- however they don't, becuase in rust these don't auto-coerce to a generic '`Fn(&Theme) -> Container::Appearance`' type, but rather have a specific generated type for their specific value (e.g. type of 'task_style whatever' in the first example
 - so to use them, they need to be casted, specifically using something like `as for<'r> fn(&'r _) -> _`.
 
 I figured this out with something like:
