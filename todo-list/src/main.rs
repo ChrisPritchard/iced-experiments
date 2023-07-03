@@ -6,6 +6,7 @@ use iced::widget::{text_input, row, column, text, container, scrollable, mouse_a
 struct TodoList {
     tasks: Vec<Task>,
     being_edited: Option<u32>,
+    being_dragged: Option<u32>,
 }
 
 #[derive(Copy, Debug, Clone, PartialEq)]
@@ -27,7 +28,8 @@ enum TodoMessage {
     SaveEdited,
     DeleteTask(u32),
     AddTask(Status),
-    ChangeStatus(u32, Status),
+    DraggingTask(u32),
+    DroppedInRow(Status)
 }
 
 impl Sandbox for TodoList {
@@ -57,6 +59,7 @@ impl Sandbox for TodoList {
         Self { 
             tasks: dummy_tasks, 
             being_edited: Some(3), 
+            being_dragged: None,
         }
     }
 
@@ -89,14 +92,20 @@ impl Sandbox for TodoList {
                 });
                 self.being_edited = Some(next_id);
             },
-            TodoMessage::ChangeStatus(id, new_status) =>  {
+            
+            TodoMessage::SaveEdited => self.being_edited = None,
+            TodoMessage::DraggingTask(u32) => self.being_dragged = Some(u32),
+            TodoMessage::DroppedInRow(new_status) => {
+                if self.being_dragged == None {
+                    return;
+                }
+                let id = self.being_dragged.unwrap();
                 self.tasks.iter_mut().for_each(|f| {
                     if f.id == id {
                         f.status = new_status;
                     }
                 });
             },
-            TodoMessage::SaveEdited => self.being_edited = None,
         }
     }
 
@@ -141,10 +150,10 @@ impl Sandbox for TodoList {
                         .spacing(10)
                 };
 
-            container(row(vec![
+            container(mouse_area(row(vec![
                     container(content).width(Length::FillPortion(4)).into(),
                     buttons.width(Length::FillPortion(1)).into()
-                ]))
+                ])).on_press(TodoMessage::DraggingTask(task.id)))
                 .width(Length::Fill)
                 .padding(10)
                 .style(style)
@@ -187,11 +196,12 @@ impl Sandbox for TodoList {
                 }
             } as for<'r> fn(&'r _) -> _;
 
-            container(arrangement)
+            mouse_area(container(arrangement)
                 .style(style)
                 .width(Length::FillPortion(1))
                 .height(Length::Fill)
-                .padding(10)
+                .padding(10))
+                .on_release(TodoMessage::DroppedInRow(status))
                 .into()
         }
 
