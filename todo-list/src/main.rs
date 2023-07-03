@@ -1,17 +1,19 @@
+use iced::alignment::{Vertical, Horizontal};
 use iced::widget::container::Appearance;
-use iced::{Sandbox, Settings, Element, Length, Theme};
-use iced::widget::{text_input, row, column, text, container};
+use iced::{Sandbox, Settings, Element, Length, Theme, Font, Alignment};
+use iced::widget::{text_input, row, column, text, container, scrollable, mouse_area, Text, button, Row};
 
 struct TodoList {
     tasks: Vec<Task>,
     being_edited: Option<u32>,
 }
 
-#[derive(PartialEq)]
+#[derive(Copy, Debug, Clone, PartialEq)]
 enum Status {
     Todo, Doing, Done
 }
 
+#[derive(Clone, Debug)]
 struct Task {
     id: u32,
     description: String,
@@ -20,6 +22,12 @@ struct Task {
 
 #[derive(Debug, Clone)]
 enum TodoMessage {
+    UpdateTask(String),
+    EditTask(u32),
+    SaveEdited,
+    DeleteTask(u32),
+    AddTask(Status),
+    ChangeStatus(u32, Status),
 }
 
 impl Sandbox for TodoList {
@@ -57,10 +65,50 @@ impl Sandbox for TodoList {
     }
 
     fn update(&mut self, message: Self::Message) {
-        match message {}
+        match message {
+            TodoMessage::UpdateTask(content) => {
+                self.tasks.iter_mut().for_each(|f| {
+                    if f.id == self.being_edited.unwrap() {
+                        f.description = content.clone();
+                    }
+                });
+            },
+            TodoMessage::EditTask(id) => self.being_edited = Some(id),
+            TodoMessage::DeleteTask(id) => {
+                if self.being_edited.is_some() && self.being_edited.unwrap() == id {
+                    self.being_edited = None;
+                }
+                self.tasks.retain(|t| t.id != id);
+            },
+            TodoMessage::AddTask(status) => {
+                let next_id = self.tasks.iter().map(|t| t.id).max().unwrap_or(0) + 1;
+                self.tasks.push(Task {
+                    id: next_id,
+                    description: "".into(),
+                    status
+                });
+                self.being_edited = Some(next_id);
+            },
+            TodoMessage::ChangeStatus(id, new_status) =>  {
+                self.tasks.iter_mut().for_each(|f| {
+                    if f.id == id {
+                        f.status = new_status;
+                    }
+                });
+            },
+            TodoMessage::SaveEdited => self.being_edited = None,
+        }
     }
 
     fn view(&self) -> iced::Element<TodoMessage> {
+
+        fn centered_text(content: &str) -> Text {
+            text(content.clone())
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .vertical_alignment(Vertical::Center)
+                .horizontal_alignment(Horizontal::Center)
+        }
 
         fn task_view(task: &Task, is_selected: bool) -> iced::Element<TodoMessage> {
             let style = |theme: &Theme| -> Appearance {
@@ -72,15 +120,33 @@ impl Sandbox for TodoList {
                 }
             } as for<'r> fn(&'r _) -> _;
 
-            let content: iced::Element<TodoMessage> = 
+            let content: Element<TodoMessage> = 
                 if is_selected {
-                    text_input("task description...".into(), &task.description.to_owned()).into()
+                    text_input("task description...".into(), &task.description.to_owned())
+                        .on_input(TodoMessage::UpdateTask).into()
                 } else {
                     text(&task.description).into()
                 };
-            container(content)
+            
+            let buttons =
+                if is_selected {
+                    let save_button = button(centered_text("save")).on_press(TodoMessage::SaveEdited).width(Length::Fill);
+                    column(vec![save_button.into()])
+                        .align_items(Alignment::Center)
+                } else {
+                    let edit_button = button(centered_text("edit")).on_press(TodoMessage::EditTask(task.id)).width(Length::Fill);
+                    let delete_button = button(centered_text("drop")).on_press(TodoMessage::DeleteTask(task.id)).width(Length::Fill);
+                    column(vec![edit_button.into(), delete_button.into()])
+                        .align_items(Alignment::Center)
+                        .spacing(10)
+                };
+
+            container(row(vec![
+                    container(content).width(Length::FillPortion(4)).into(),
+                    buttons.width(Length::FillPortion(1)).into()
+                ]))
                 .width(Length::Fill)
-                .padding(5)
+                .padding(10)
                 .style(style)
                 .into()
         }
@@ -100,8 +166,14 @@ impl Sandbox for TodoList {
                 Status::Doing => "DOING",
                 Status::Done => "DONE",
             };
-            let mut tasks_items: Vec<Element<TodoMessage>> = vec![text(heading).into()];
+            let heading = text(heading).size(30);
+            let mut tasks_items: Vec<Element<TodoMessage>> = vec![heading.into()];
             tasks_items.extend(tasks);
+
+            let add_button = button(centered_text("+"))
+                .on_press(TodoMessage::AddTask(status))
+                .width(Length::Fill);
+            tasks_items.push(add_button.into());
 
             let arrangement =
                 column(tasks_items).spacing(10);
