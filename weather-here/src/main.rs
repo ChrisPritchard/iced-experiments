@@ -109,7 +109,22 @@ impl Application for WeatherHere {
                 text("Long:").into(),
                 text_input("Longitude", &self.longitude).on_input(Message::SetLong).into(),
                 ]).into(),
-            button("Fetch Weather").on_press(Message::FetchWeather).into()
+            button("Fetch Weather").on_press(Message::FetchWeather).into(),
+            if self.weather.is_some() {
+                let weather = self.weather.as_ref().unwrap();
+                row(vec![
+                    column(vec![
+                        text(&weather.location).into(),
+                        text(format!("{:.1} °C", &weather.temperature)).size(80).into()
+                    ]).into(),
+                    column(vec![
+                        text(format!("{:?}", &weather.cloud_cover)).into(),
+                        text(format!("{:.1}% humidity", &weather.humidity)).into()
+                    ]).into(),
+                ]).into()
+            } else {
+                text("No weather retrieved").into()
+            }
         ])
             .padding(10)
             .width(Length::Fill)
