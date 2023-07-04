@@ -1,5 +1,7 @@
 # Weather here
 
+![](./weatherhere.jpg)
+
 - Tries to get current location (using ifconfig.co), and/or allows coords to be imputed
 - Calls a weather api to retrieve info
 
