@@ -2,6 +2,8 @@
 
 Project to house projects I have undertaken in order to learn iced-rs, an Elm-based UI framework for rust
 
+There are screenshots of each project, when they're finished, along with a readme in each folder.
+
 ## Some ideas (from ChatGPT):
 
 Exploring a new UI programming framework can be an exciting endeavor. Here are some ideas for simple UI applications that you can build to get hands-on experience and familiarize yourself with the framework:
