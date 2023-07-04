@@ -1,5 +1,6 @@
 
 use data::WeatherInfo;
+use iced::alignment::Vertical;
 use iced::{Settings, Element, Length, Application, Command, Renderer, executor};
 use iced::widget::{row,column,text,text_input,button};
 
@@ -49,10 +50,12 @@ impl Application for WeatherHere {
             let lat = this.latitude.parse::<f64>();
             if lat.is_err() || lat.as_ref().unwrap().clamp(-90., 90.) != lat.unwrap() {
                 this.invalid_coord = true;
+                return;
             }
             let long = this.longitude.parse::<f64>();
             if long.is_err() || long.as_ref().unwrap().clamp(-180., 180.) != long.unwrap() {
                 this.invalid_coord = true;
+                return;
             }
             this.invalid_coord = false;
         }
@@ -98,17 +101,21 @@ impl Application for WeatherHere {
 
     fn view(&self) -> Element<'_, Self::Message, Renderer<Self::Theme>> {
 
+        fn center_left_text(t: &str) -> Element<Message> {
+            text(t).height(Length::Fill).vertical_alignment(Vertical::Center).into()
+        }
+
         column(vec![
             row(vec![
-                text("Coords:").into(),
+                center_left_text("Coords:"),
                 button("Guess from public IP").on_press(Message::FetchCoords).into()
-                ]).into(),
+                ]).height(30).spacing(20).into(),
             row(vec![
-                text("Lat:").into(),
+                center_left_text("Lat:"),
                 text_input("Latitude", &self.latitude).on_input(Message::SetLat).into(),
-                text("Long:").into(),
+                center_left_text("Long:"),
                 text_input("Longitude", &self.longitude).on_input(Message::SetLong).into(),
-                ]).into(),
+                ]).height(25).spacing(10).into(),
             button("Fetch Weather").on_press(Message::FetchWeather).into(),
             if self.weather.is_some() {
                 let weather = self.weather.as_ref().unwrap();
@@ -116,18 +123,19 @@ impl Application for WeatherHere {
                     column(vec![
                         text(&weather.location).into(),
                         text(format!("{:.1} °C", &weather.temperature)).size(80).into()
-                    ]).into(),
+                    ]).width(Length::FillPortion(2)).into(),
                     column(vec![
                         text(format!("{:?}", &weather.cloud_cover)).into(),
                         text(format!("{:.1}% humidity", &weather.humidity)).into()
-                    ]).into(),
-                ]).into()
+                    ]).width(Length::FillPortion(1)).spacing(10).into(),
+                ]).spacing(20).into()
             } else {
                 text(if self.invalid_coord { "Set valid lat and long" } 
                     else { "No weather retrieved" }).into()
             }
         ])
             .padding(10)
+            .spacing(10)
             .width(Length::Fill)
             .height(Length::Fill)
             .into()
@@ -136,7 +144,7 @@ impl Application for WeatherHere {
 
 fn main() -> iced::Result {
     let mut settings = Settings::default();
-    settings.window.size = (400, 300);
+    settings.window.size = (400, 250);
     settings.window.resizable = false;
     WeatherHere::run(settings)
 }
