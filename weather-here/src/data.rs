@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{time::Duration, fmt::Display};
 
 use rand::Rng;
 
@@ -13,6 +13,16 @@ pub struct WeatherInfo {
 #[derive(Debug, Clone)]
 pub enum CloudCover {
     Clear, PartlyCloudy, Overcast
+}
+
+impl Display for CloudCover {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CloudCover::Clear => f.write_str("Clear"),
+            CloudCover::PartlyCloudy => f.write_str("Partly Cloudy"),
+            CloudCover::Overcast => f.write_str("Overcast"),
+        }
+    }
 }
 
 pub async fn coords_by_ip() -> Option<(f64, f64)> {

@@ -125,7 +125,7 @@ impl Application for WeatherHere {
                         text(format!("{:.1} °C", &weather.temperature)).size(80).into()
                     ]).width(Length::FillPortion(2)).into(),
                     column(vec![
-                        text(format!("{:?}", &weather.cloud_cover)).into(),
+                        text(format!("{}", &weather.cloud_cover)).into(),
                         text(format!("{:.1}% humidity", &weather.humidity)).into()
                     ]).width(Length::FillPortion(1)).spacing(10).into(),
                 ]).spacing(20).into()
