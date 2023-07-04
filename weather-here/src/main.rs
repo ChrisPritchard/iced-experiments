@@ -1,4 +1,5 @@
-use iced::{Settings, Element, Length, Application, Command, Renderer, executor, theme};
+use iced::theme::TextInput;
+use iced::{Settings, Element, Length, Application, Command, Renderer, executor, theme, Theme, Color};
 use iced::widget::{row,column,text,text_input,button};
 use serde_json::Value;
 
@@ -97,6 +98,27 @@ impl Application for WeatherHere {
 
     fn view(&self) -> Element<'_, Self::Message, Renderer<Self::Theme>> {
 
+        let valid_style: for<'r> fn(&'r _) -> _ = |_: &Theme| -> text_input::Appearance {
+            text_input::Appearance { 
+                border_color: Color::from_rgb(0., 1., 0.),
+                background: Color::TRANSPARENT.into(),
+                border_radius: 0.,
+                border_width: 1.,
+                icon_color: Color::BLACK,
+            }
+        };
+        let valid_style = Box::new(valid_style);
+
+        let invalid_style: for<'r> fn(&'r _) -> _ = |_: &Theme| -> text_input::Appearance {
+            text_input::Appearance { 
+                border_color: Color::from_rgb(1., 0., 0.),
+                background: Color::TRANSPARENT.into(),
+                border_radius: 0.,
+                border_width: 1.,
+                icon_color: Color::BLACK,
+            }
+        };
+
         column(vec![
             row(vec![
                 text("Coords:").into(), 
@@ -104,7 +126,10 @@ impl Application for WeatherHere {
                 ]).into(),
             row(vec![
                 text("Lat:").into(),
-                text_input("Latitude", &self.latitude).on_input(Message::SetLat).into(),
+                text_input("Latitude", &self.latitude)
+                    .style(TextInput::Custom(valid_style))
+                    .on_input(Message::SetLat)
+                    .into(),
                 text("Long:").into(),
                 text_input("Longitude", &self.longitude).on_input(Message::SetLong).into(),
                 ]).into(),
