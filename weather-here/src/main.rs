@@ -123,7 +123,8 @@ impl Application for WeatherHere {
                     ]).into(),
                 ]).into()
             } else {
-                text("No weather retrieved").into()
+                text(if self.invalid_coord { "Set valid lat and long" } 
+                    else { "No weather retrieved" }).into()
             }
         ])
             .padding(10)
