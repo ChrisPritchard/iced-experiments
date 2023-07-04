@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use iced::{Settings, Element, Length, Application, Command, Renderer, executor};
 use iced::widget::{row,column,text,text_input,button};
+use rand::Rng;
 
 struct WeatherHere {
     latitude: String,
@@ -60,15 +61,27 @@ enum CloudCover {
     Clear, PartlyCloudy, Overcast
 }
 
-async fn weather_for_coords(lat: f64, long: f64) -> Option<WeatherInfo> {
+async fn weather_for_coords(_lat: f64, _long: f64) -> Option<WeatherInfo> {
     tokio::time::sleep(Duration::from_secs(1)).await;
     
-    // let location = ["Auckland", "Wellington", "Christchurch"][rand::rng]
+    let mut rng = rand::thread_rng();
+    let city = match rng.gen_range(0..=2) {
+        0 => "Wellington".to_string(),
+        1 => "Auckland".to_string(),
+        _ => "Christchurch".to_string(),
+    };
+    
+    let clouds = match rng.gen_range(0..=2) {
+        0 => CloudCover::Clear,
+        1 => CloudCover::PartlyCloudy,
+        _ => CloudCover::Overcast,
+    };
+
     Some(WeatherInfo {
-        location: "Wellington".into(),
-        temperature: 10.,
-        humidity: 5.,
-        cloud_cover: CloudCover::Overcast,
+        location: city,
+        temperature: rng.gen_range(5.0..=25.),
+        humidity: rng.gen_range(0.0..=100.),
+        cloud_cover: clouds,
     })
 }
 
@@ -139,7 +152,10 @@ impl Application for WeatherHere {
                 let long = self.longitude.parse::<f64>().unwrap();
                 Command::perform(weather_for_coords(lat, long), Message::WeatherReceived)
             },
-            Message::WeatherReceived(_) => todo!(),
+            Message::WeatherReceived(w) => {
+                self.weather = w;
+                Command::none()
+            },
         }
     }
 
