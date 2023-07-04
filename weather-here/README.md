@@ -1,13 +1,10 @@
 # Weather here
 
 - Tries to get current location, and/or allows coords to be imputed
-- Calls the metservice api https://www.metservice.com/point-forecast-api/plans to get weather details and prints on the screen.
+- Calls a weather api to retrieve info
 
-Model would be the weather, perhaps some stats like humidity, rain etc, and would allow you to specify time jumping between today, tomorrow etc.
+Only partially completed; currently calls ifconfig.co to retrieve the current lat and long, which achieves what this example helped teach me: how to use the command system with the full iced Application trait.
 
-Events therefore would be:
+Next step would be fetching weather, but this requires a subscription to a weather service which I can't (at present) be bothered with
 
-- FetchCoords
-- SetCoords
-- FetchWeather
-- WeatherReceived
+Additionally, ran into issues trying to set border colours for input boxes. Styling here does not work as it did for containers, largely due to the traits like From not being implemented for text_input.
