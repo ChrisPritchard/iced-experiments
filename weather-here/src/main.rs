@@ -1,11 +1,13 @@
+use std::time::Duration;
+
 use iced::{Settings, Element, Length, Application, Command, Renderer, executor};
 use iced::widget::{row,column,text,text_input,button};
 
 struct WeatherHere {
-    latitude: String, 
+    latitude: String,
     longitude: String,
     invalid_coord: bool,
-    weather: String,
+    weather: Option<WeatherInfo>,
 }
 
 #[derive(Debug, Clone)]
@@ -15,12 +17,12 @@ enum Message {
     SetLat(String),
     SetLong(String),
     FetchWeather,
-    WeatherReceived(Option<String>),
+    WeatherReceived(Option<WeatherInfo>),
 }
 
 async fn coords_by_ip() -> Option<(f64, f64)> {
     let url = "https://ifconfig.co/";
-    
+
     let client = reqwest::Client::new();
     let response = client
         .get(url)
@@ -45,6 +47,31 @@ async fn coords_by_ip() -> Option<(f64, f64)> {
     Some((latitude, longitude))
 }
 
+#[derive(Debug, Clone)]
+struct WeatherInfo {
+    location: String,
+    temperature: f64,
+    humidity: f64,
+    cloud_cover: CloudCover
+}
+
+#[derive(Debug, Clone)]
+enum CloudCover {
+    Clear, PartlyCloudy, Overcast
+}
+
+async fn weather_for_coords(lat: f64, long: f64) -> Option<WeatherInfo> {
+    tokio::time::sleep(Duration::from_secs(1)).await;
+    
+    // let location = ["Auckland", "Wellington", "Christchurch"][rand::rng]
+    Some(WeatherInfo {
+        location: "Wellington".into(),
+        temperature: 10.,
+        humidity: 5.,
+        cloud_cover: CloudCover::Overcast,
+    })
+}
+
 impl Application for WeatherHere {
     type Executor = executor::Default;
     type Message = Message;
@@ -57,7 +84,7 @@ impl Application for WeatherHere {
                 latitude: "".into(),
                 longitude: "".into(),
                 invalid_coord: true,
-                weather: "".into()
+                weather: None,
             },
             Command::none()
         )
@@ -80,8 +107,8 @@ impl Application for WeatherHere {
             this.invalid_coord = false;
         }
         match message {
-            Message::FetchCoords => { 
-                Command::perform(coords_by_ip(), Message::CoordReceived) 
+            Message::FetchCoords => {
+                Command::perform(coords_by_ip(), Message::CoordReceived)
             },
             Message::SetLat(s) => {
                 self.latitude = s;
@@ -108,9 +135,9 @@ impl Application for WeatherHere {
                 if self.invalid_coord {
                     return Command::none()
                 }
-                let _lat = self.latitude.parse::<f64>().unwrap();
-                let _long = self.longitude.parse::<f64>().unwrap();
-                todo!()
+                let lat = self.latitude.parse::<f64>().unwrap();
+                let long = self.longitude.parse::<f64>().unwrap();
+                Command::perform(weather_for_coords(lat, long), Message::WeatherReceived)
             },
             Message::WeatherReceived(_) => todo!(),
         }
@@ -120,7 +147,7 @@ impl Application for WeatherHere {
 
         column(vec![
             row(vec![
-                text("Coords:").into(), 
+                text("Coords:").into(),
                 button("Guess from public IP").on_press(Message::FetchCoords).into()
                 ]).into(),
             row(vec![
