@@ -1,20 +1,49 @@
 use iced::{Settings, Element, Length, Application, Command, Renderer, executor, theme};
 use iced::widget::{row,column,text,text_input,button};
+use serde_json::Value;
 
 struct WeatherHere {
-    latitude: Option<f32>, 
-    longitude: Option<f32>,
+    latitude: String, 
+    longitude: String,
     status: String,
     location: String,
-    temperature: f32,
+    temperature: f64,
     weather: String,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
     FetchCoords,
+    CoordReceived(Option<(f64, f64)>),
     SetLat(String),
     SetLong(String),
+}
+
+async fn coords_by_ip() -> Option<(f64, f64)> {
+    let url = "https://ifconfig.co/";
+    
+    let client = reqwest::Client::new();
+    let response = client
+        .get(url)
+        .header("Host", "ifconfig.co")
+        .header("Accept", "application/json")
+        .header("Connection", "close")
+        .send()
+        .await;
+    if response.is_err() {
+        return None;
+    }
+
+    let json = response.unwrap().json::<serde_json::Value>().await;
+    if json.is_err() {
+        return None;
+    }
+
+    let json = json.unwrap();
+    let latitude = json["latitude"].as_f64().unwrap();
+    let longitude = json["longitude"].as_f64().unwrap();
+
+    Some((latitude, longitude))
 }
 
 impl Application for WeatherHere {
@@ -26,8 +55,8 @@ impl Application for WeatherHere {
     fn new(_flags: Self::Flags) -> (Self, Command<Self::Message>) {
         (
             Self {
-                latitude: None,
-                longitude: None,
+                latitude: "".into(),
+                longitude: "".into(),
                 status: "".into(),
                 location: "".into(),
                 temperature: 0.,
@@ -41,17 +70,32 @@ impl Application for WeatherHere {
         "WeatherHERE".into()
     }
 
-    fn update(&mut self, _message: Self::Message) -> Command<Self::Message> {
-        Command::none()
+    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
+        match message {
+            Message::FetchCoords => { 
+                Command::perform(coords_by_ip(), Message::CoordReceived) 
+            },
+            Message::SetLat(s) => {
+                self.latitude = s;
+                Command::none()
+            },
+            Message::SetLong(s) => {
+                self.longitude = s;
+                Command::none()
+            }
+            Message::CoordReceived(o) => {
+                if o.is_none() {
+                    return Command::none()
+                }
+                let (lat, long) = o.unwrap();
+                self.latitude = lat.to_string();
+                self.longitude = long.to_string();
+                Command::none()
+            },
+        }
     }
 
     fn view(&self) -> Element<'_, Self::Message, Renderer<Self::Theme>> {
-        let lat = if self.latitude.is_some() { 
-            self.latitude.unwrap().to_string()
-        } else { "".into() };
-        let long = if self.longitude.is_some() { 
-            self.longitude.unwrap().to_string() 
-        } else { "".into() };
 
         column(vec![
             row(vec![
@@ -60,9 +104,9 @@ impl Application for WeatherHere {
                 ]).into(),
             row(vec![
                 text("Lat:").into(),
-                text_input("Latitude", &lat).on_input(Message::SetLat).into(),
+                text_input("Latitude", &self.latitude).on_input(Message::SetLat).into(),
                 text("Long:").into(),
-                text_input("Longitude", &long).on_input(Message::SetLong).into(),
+                text_input("Longitude", &self.longitude).on_input(Message::SetLong).into(),
                 ]).into(),
             text(&self.status).into()
         ])
