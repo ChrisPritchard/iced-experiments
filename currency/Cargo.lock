@@ -450,6 +450,7 @@ dependencies = [
  "iced",
  "reqwest",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
