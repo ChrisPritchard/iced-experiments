@@ -1,10 +1,14 @@
 
 use data::WeatherInfo;
 use iced::alignment::Vertical;
-use iced::{Settings, Element, Length, Application, Command, Renderer, executor};
+use iced::theme::TextInput;
+use iced::{Settings, Element, Length, Application, Command, Renderer, executor, Color};
 use iced::widget::{row,column,text,text_input,button};
 
+use crate::style::TextBoxValid;
+
 mod data;
+mod style;
 
 struct WeatherHere {
     latitude: String,
@@ -105,6 +109,17 @@ impl Application for WeatherHere {
             text(t).height(Length::Fill).vertical_alignment(Vertical::Center).into()
         }
 
+        let lat_style = TextBoxValid { 
+            valid: self.latitude.parse::<f64>().is_ok(), 
+            green: Color::from_rgb(0., 0.7, 0.), 
+            red: Color::from_rgb(1., 0., 0.) 
+        };
+
+        let long_style = TextBoxValid { 
+            valid: self.longitude.parse::<f64>().is_ok(), 
+            ..lat_style
+        };
+
         column(vec![
             row(vec![
                 center_left_text("Coords:"),
@@ -112,9 +127,13 @@ impl Application for WeatherHere {
                 ]).height(30).spacing(20).into(),
             row(vec![
                 center_left_text("Lat:"),
-                text_input("Latitude", &self.latitude).on_input(Message::SetLat).into(),
+                text_input("Latitude", &self.latitude)
+                    .style(TextInput::Custom(Box::new(lat_style.clone())))
+                    .on_input(Message::SetLat).into(),
                 center_left_text("Long:"),
-                text_input("Longitude", &self.longitude).on_input(Message::SetLong).into(),
+                text_input("Longitude", &self.longitude)
+                    .style(TextInput::Custom(Box::new(long_style.clone())))
+                    .on_input(Message::SetLong).into(),
                 ]).height(25).spacing(10).into(),
             button("Fetch Weather").on_press(Message::FetchWeather).into(),
             if self.weather.is_some() {
