@@ -1,7 +1,7 @@
 use iced::alignment::{Vertical, Horizontal};
 use iced::widget::container::Appearance;
-use iced::{Sandbox, Settings, Element, Length, Theme, Font, Alignment};
-use iced::widget::{text_input, row, column, text, container, scrollable, mouse_area, Text, button, Row};
+use iced::{Sandbox, Settings, Element, Length, Theme, Alignment};
+use iced::widget::{text_input, row, column, text, container, mouse_area, Text, button};
 
 struct TodoList {
     tasks: Vec<Task>,
