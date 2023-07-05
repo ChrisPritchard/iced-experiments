@@ -1,10 +1,16 @@
-use iced::{widget::text_input, Color, Theme};
+use iced::{widget::text_input, Color, Theme, theme::TextInput};
 
 #[derive(Clone)]
 pub struct TextBoxValid {
     pub valid: bool,
     pub green: Color,
     pub red: Color,
+}
+
+impl Into<TextInput> for TextBoxValid {
+    fn into(self) -> TextInput {
+        TextInput::Custom(Box::new(self))
+    }
 }
 
 impl text_input::StyleSheet for TextBoxValid {

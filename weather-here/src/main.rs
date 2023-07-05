@@ -1,7 +1,6 @@
 
 use data::WeatherInfo;
 use iced::alignment::Vertical;
-use iced::theme::TextInput;
 use iced::{Settings, Element, Length, Application, Command, Renderer, executor, Color};
 use iced::widget::{row,column,text,text_input,button};
 
@@ -128,11 +127,11 @@ impl Application for WeatherHere {
             row(vec![
                 center_left_text("Lat:"),
                 text_input("Latitude", &self.latitude)
-                    .style(TextInput::Custom(Box::new(lat_style.clone())))
+                    .style(lat_style)
                     .on_input(Message::SetLat).into(),
                 center_left_text("Long:"),
                 text_input("Longitude", &self.longitude)
-                    .style(TextInput::Custom(Box::new(long_style.clone())))
+                    .style(long_style)
                     .on_input(Message::SetLong).into(),
                 ]).height(25).spacing(10).into(),
             button("Fetch Weather").on_press(Message::FetchWeather).into(),
