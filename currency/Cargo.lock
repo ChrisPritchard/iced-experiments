@@ -437,6 +437,7 @@ version = "0.1.0"
 dependencies = [
  "iced",
  "rand",
+ "rand_chacha",
  "serde_json",
  "tokio",
 ]
