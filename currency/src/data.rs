@@ -11,9 +11,18 @@ pub const CURRENCIES: [&str; 5] = [
     "JPY",
 ];
 
-pub async fn calculate(value: f64, _from_denom: String, _to_denom: String) -> String {
+pub async fn calculate(value: f64, from_denom: String, to_denom: String) -> String {
     tokio::time::sleep(Duration::from_secs(1)).await;
-    let mut rng = ChaCha8Rng::seed_from_u64(1);
+
+    if from_denom == to_denom {
+        return format!("{:.2}", value);
+    }
+
+    let d1 = CURRENCIES.iter().position(|f| **f == from_denom).unwrap();
+    let d2 = CURRENCIES.iter().position(|f| **f == to_denom).unwrap();
+    let seed = d1 * 10 + d2;
+
+    let mut rng = ChaCha8Rng::seed_from_u64(seed as u64);
     let rate = rng.gen_range(0.1..2.);
     format!("{:.2}", value * rate)
 }
