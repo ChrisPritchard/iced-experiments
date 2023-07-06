@@ -118,7 +118,7 @@ impl Application for Currency {
 fn main() -> iced::Result {
     let settings = iced::Settings {
         window: iced::window::Settings {
-            size: (400, 300),
+            size: (400, 150),
             ..iced::window::Settings::default()
         },
         ..iced::Settings::default()
