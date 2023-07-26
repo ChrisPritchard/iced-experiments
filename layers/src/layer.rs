@@ -1,5 +1,7 @@
 use iced::{Element, advanced::{Widget, self, widget::{Tree, self}, Layout, mouse, Clipboard, Shell, layout, renderer, overlay}, Rectangle, Event, event, Length, Size, Point, Alignment};
 
+/// A custom widget that will present its content as an overlay. A trivial way to put content on top of other content, but only works if there is a single overlay in your app.
+/// Otherwise, if the overlay bounds overlap with another Layer overlay, the result is bleed through of elements and events etc.
 pub struct Layer<'a, Message, Renderer> {
     rect: Rectangle<f32>,
     content: Element<'a, Message, Renderer>,

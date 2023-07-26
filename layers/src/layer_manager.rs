@@ -1,5 +1,6 @@
 use iced::{Element, advanced::{Widget, self, widget::{Tree, self}, Layout, mouse, Clipboard, Shell, layout, renderer, overlay}, Rectangle, Event, event, Length, Size, Point, Alignment};
 
+/// Represents one layer presented by the [LayerManager], with its own position on screen and content to draw at that position.
 pub struct Layer<'a, Message, Renderer> {
     rect: Rectangle<f32>,
     content: Element<'a, Message, Renderer>,
@@ -11,6 +12,8 @@ impl<'a, Message, Renderer> Layer<'a, Message, Renderer> {
     }
 }
 
+/// A custom widget that takes a vec of [Layer]s, which it will render in order. E.g. the lower layer will be the first element, the second layer will be drawn over top and so on.
+/// Each subsequent layer is presented as the overlay of the layer underneath. In this way, multiple levels of overlay can be presented without bleed through.
 pub struct LayerManager<'a, Message, Renderer> {
     content: Vec<Layer<'a, Message, Renderer>>,
 }
@@ -88,6 +91,7 @@ where
     }
 }
 
+/// The [overlay::Overlay] implementation that renders a [Layer]. It also takes tree and layers to render in its own overlay function, where this class is re-instantiated
 struct LayerOverlay<'a, 'b, Message, Renderer> {
     content: &'b mut Element<'a, Message, Renderer>,
     layers: &'b mut [Layer<'a, Message, Renderer>],
