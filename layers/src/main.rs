@@ -1,31 +1,10 @@
 
-use iced::{Sandbox, widget::{text, button, container, text_input}, Settings, Length, Rectangle, Point, Size, Element, Background, Color, advanced::widget::Operation};
+use iced::{Sandbox, widget::{text, button, container, text_input}, Settings, Length, Rectangle, Point, Size, Element, Background, Color};
 use iced::widget::column;
 
-use crate::layer_manager::LayerManager;
+use crate::overlay_manager::*;
 
-mod layer_manager;
-mod layer;
-mod element_wrapper;
-
-pub fn border<T: 'static>(content: Element<T>) -> container::Container<T> {
-
-    let style = |theme: &iced::Theme| -> container::Appearance {
-        let palette = theme.extended_palette();
-        let bg_color = Color::WHITE;
-        container::Appearance {
-            border_width: 2.,
-            border_color: palette.primary.base.color,
-            background: Some(Background::Color(bg_color)),
-            ..Default::default()
-        }
-    } as for<'r> fn(&'r _) -> _;
-
-    iced::widget::container(content)
-        .padding(10)
-        .style(style)
-        .into()
-}
+mod overlay_manager;
 
 struct LayersApp {
     message: String,
@@ -60,8 +39,8 @@ impl Sandbox for LayersApp {
         }
 
         column![
-            LayerManager::new(vec![
-                layer_manager::Layer::new(
+            OverlayManager::new(vec![
+                overlay_manager::Layer::new(
                     rect(200., 200., 300., 300.), 
                     border(column![
                         text("some sample text"),
@@ -69,7 +48,7 @@ impl Sandbox for LayersApp {
                         text("to see how it looks"),
                     ].into()).into()
                 ),
-                layer_manager::Layer::new(
+                overlay_manager::Layer::new(
                     rect(220., 220., 300., 300.), 
                     border(column![
                         text("some text and inputs"),
@@ -77,7 +56,7 @@ impl Sandbox for LayersApp {
                         button("button").on_press(Message::SetMessage("layer 2 pressed".into()))
                     ].into()).into()
                 ),
-                layer_manager::Layer::new(
+                overlay_manager::Layer::new(
                     rect(240., 240., 300., 300.), 
                     border(column![
                         text("final layer with"),
@@ -94,4 +73,23 @@ impl Sandbox for LayersApp {
 
 fn main() -> Result<(), iced::Error> {
     LayersApp::run(Settings::default())
+}
+
+fn border<T: 'static>(content: Element<T>) -> container::Container<T> {
+
+    let style = |theme: &iced::Theme| -> container::Appearance {
+        let palette = theme.extended_palette();
+        let bg_color = Color::WHITE;
+        container::Appearance {
+            border_width: 2.,
+            border_color: palette.primary.base.color,
+            background: Some(Background::Color(bg_color)),
+            ..Default::default()
+        }
+    } as for<'r> fn(&'r _) -> _;
+
+    iced::widget::container(content)
+        .padding(10)
+        .style(style)
+        .into()
 }

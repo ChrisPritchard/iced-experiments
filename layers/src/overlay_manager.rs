@@ -1,7 +1,6 @@
 use iced::{Element, advanced::{Widget, self, widget::{Tree, self}, Layout, mouse, Clipboard, Shell, layout, renderer, overlay}, Rectangle, Event, event, Length, Size, Point, Alignment};
 
-/// A custom widget that will present its content as an overlay. A trivial way to put content on top of other content, but only works if there is a single overlay in your app.
-/// Otherwise, if the overlay bounds overlap with another Layer overlay, the result is bleed through of elements and events etc.
+/// Represents one layer presented by the [OverlayManager], with its own position on screen and content to draw at that position.
 pub struct Layer<'a, Message, Renderer> {
     rect: Rectangle<f32>,
     content: Element<'a, Message, Renderer>,
@@ -13,9 +12,19 @@ impl<'a, Message, Renderer> Layer<'a, Message, Renderer> {
     }
 }
 
-// largely does nothing - no size, no drawing, no other fancy event methods. just creates the overlay on request, passing in the position and size variables from the struct
+/// A custom widget that takes a vec of [Layer]s, which it will render in order. E.g. the lower layer will be the first element, the second layer will be drawn over top and so on.
+/// Each subsequent layer is presented as the overlay of the layer underneath. In this way, multiple levels of overlay can be presented without bleed through.
+pub struct OverlayManager<'a, Message, Renderer> {
+    content: Vec<Layer<'a, Message, Renderer>>,
+}
 
-impl<'a, Message, Renderer> Widget<Message, Renderer> for Layer<'a, Message, Renderer> 
+impl<'a, Message, Renderer> OverlayManager<'a, Message, Renderer> {
+    pub fn new(content: Vec<Layer<'a, Message, Renderer>>) -> Self {
+        Self { content }
+    }
+}
+
+impl<'a, Message, Renderer> Widget<Message, Renderer> for OverlayManager<'a, Message, Renderer> 
 where
     Renderer: advanced::Renderer,
     Message: Clone,
@@ -47,12 +56,13 @@ where
         _viewport: &Rectangle,
     ) { }
 
-    fn children(&self) -> Vec<Tree> {
-        vec![Tree::new(&self.content)]
+    fn children(&self) -> Vec<widget::Tree> {
+        self.content.iter().map(|ld| widget::Tree::new(&ld.content)).collect()
     }
 
-    fn diff(&self, tree: &mut Tree) {
-        tree.diff_children(std::slice::from_ref(&self.content))
+    fn diff(&self, tree: &mut widget::Tree) {
+        let elems = self.content.iter().map(|ld| &ld.content).collect::<Vec<&Element<Message, Renderer>>>();
+        tree.diff_children(&elems);
     }
 
     fn overlay<'b>(
@@ -61,22 +71,32 @@ where
         _layout: Layout<'_>,
         _renderer: &Renderer,
     ) -> Option<overlay::Element<'b, Message, Renderer>> {
+        if self.content.is_empty() {
+            return None
+        }
+        
+        let (first, rest) = self.content.split_first_mut().unwrap();
+        let (first_tree, forest) = state.children.split_first_mut().unwrap();
+
         Some(overlay::Element::new(
-            self.rect.position(),
+            first.rect.position(),
             Box::new(LayerOverlay {
-                content: &mut self.content,
-                tree: &mut state.children[0],
-                rect: self.rect,
+                content: &mut first.content,
+                layers: rest,
+                tree: first_tree,
+                trees: forest,
+                rect: first.rect,
             }),
         ))
     }
 }
 
-/// A very basic overlay implementation that operates similar to a container, 
-/// deferring most function calls to the content it holds
+/// The [overlay::Overlay] implementation that renders a [Layer]. It also takes tree and layers to render in its own overlay function, where this class is re-instantiated
 struct LayerOverlay<'a, 'b, Message, Renderer> {
     content: &'b mut Element<'a, Message, Renderer>,
+    layers: &'b mut [Layer<'a, Message, Renderer>],
     tree: &'b mut widget::Tree,
+    trees: &'b mut [widget::Tree],
     rect: Rectangle<f32>,
 }
 
@@ -99,7 +119,7 @@ where
         let mut child = self.content.as_widget().layout(renderer, &limits);
         child.align(Alignment::Center, Alignment::Center, limits.max());
 
-        let mut node = layout::Node::with_children(self.rect.size(), vec![child]);
+        let mut node = layout::Node::with_children(child.size(), vec![child]);
         node.move_to(position);
 
         node
@@ -114,25 +134,16 @@ where
         clipboard: &mut dyn Clipboard,
         shell: &mut Shell<'_, Message>,
     ) -> event::Status {
-        let evt = 
-            self.content.as_widget_mut().on_event(
-                self.tree,
-                event,
-                layout.children().next().unwrap(),
-                cursor,
-                renderer,
-                clipboard,
-                shell,
-                &layout.bounds(),
-            );
-        
-        if evt == event::Status::Ignored {
-            if !cursor.is_over(self.rect) {
-                return event::Status::Captured;
-            }
-        }
-
-        evt
+        self.content.as_widget_mut().on_event(
+            self.tree,
+            event,
+            layout.children().next().unwrap(),
+            cursor,
+            renderer,
+            clipboard,
+            shell,
+            &layout.bounds(),
+        )
     }
 
     
@@ -187,25 +198,37 @@ where
 
     fn overlay<'c>(
         &'c mut self,
-        layout: Layout<'_>,
-        renderer: &Renderer,
+        _layout: Layout<'_>,
+        _renderer: &Renderer,
     ) -> Option<overlay::Element<'c, Message, Renderer>> {
-        self.content.as_widget_mut().overlay(
-            self.tree,
-            layout.children().next().unwrap(),
-            renderer,
-        )
+        if self.layers.is_empty() {
+            return None;
+        }
+
+        let (first, rest) = self.layers.split_first_mut().unwrap();
+        let (first_tree, forest) = self.trees.split_first_mut().unwrap();
+
+        Some(overlay::Element::new(
+            first.rect.position(),
+            Box::new(LayerOverlay {
+                content: &mut first.content,
+                layers: rest,
+                tree: first_tree,
+                trees: forest,
+                rect: first.rect,
+            }),
+        ))
     }
 }
 
-impl<'a, Message, Renderer> From<Layer<'a, Message, Renderer>>
+impl<'a, Message, Renderer> From<OverlayManager<'a, Message, Renderer>>
     for Element<'a, Message, Renderer>
 where
     Renderer: advanced::Renderer + 'a,
     Message: Clone + 'a,
 {
     fn from(
-        elem: Layer<'a, Message, Renderer>,
+        elem: OverlayManager<'a, Message, Renderer>,
     ) -> Element<'a, Message, Renderer> {
         Element::new(elem)
     }
