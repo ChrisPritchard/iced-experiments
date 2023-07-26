@@ -127,3 +127,12 @@ there are more methods with default implementations as with basic widgets:
 A wrapper-like object that takes x, y, width, height
 The layout, draw, mouse interaction etc methods of this wrapper do nothing
 Its overlay returns an overlay component that implements the normal widget methods like a container would
+
+while this works, there are issues: layers render over others, sure, but often rendering bleeds through since things are transparent. this doesnt occur with content and overlays - it seems as if un-nested overlays are treated as being on the same plane
+
+## Layer Manager
+
+Instead of having a 'layer' widget, create a 'layerS' widget that you can give a vec of layers two, with each component being treated on its own layer.
+When drawn, the vec will be passed to child layers, each taking the first then pushing the rest to the next layer
+
+there is issues with borrowing. issue being that each layer requires a mutable element and a mutable tree, as well as a slice/vec of the elements and trees to pass to the next overlay

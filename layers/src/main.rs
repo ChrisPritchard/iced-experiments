@@ -4,6 +4,9 @@ use iced::{Sandbox, widget::{text, button, container}, Settings, Length, Rectang
 use iced::widget::column;
 use layer::Layer;
 
+use crate::layer_manager::LayerManager;
+
+mod layer_manager;
 mod layer;
 mod element_wrapper;
 
@@ -55,7 +58,7 @@ impl Sandbox for LayersApp {
     fn view(&self) -> iced::Element<'_, Self::Message> {
 
         fn button_test(label: &str, on_pressed: &str) -> Element<'static, Message> {
-            button(text(label.to_string()).size(50)).on_press(Message::SetMessage(on_pressed.to_string())).into()
+            button(text(label.to_string()).size(30)).on_press(Message::SetMessage(on_pressed.to_string())).into()
         }
 
         fn rect(x: f32, y: f32, width: f32, height: f32) -> Rectangle<f32> {
@@ -64,12 +67,29 @@ impl Sandbox for LayersApp {
 
         column![
             ElementWrapper::new(button_test("wrapper", "wrapper pressed")),
+            ElementWrapper::new(button_test("wrapper", "wrapper pressed")),
+            ElementWrapper::new(button_test("wrapper", "wrapper pressed")),
+            ElementWrapper::new(button_test("wrapper", "wrapper pressed")),
             Layer::new(
-                rect(100., 100., 300., 300.), 
+                rect(10., 10., 300., 300.), 
                 button_test("simple layer", "simple layer pressed")),
             Layer::new(
-                rect(120., 120., 300., 300.), 
+                rect(20., 20., 300., 300.), 
                 border(button_test("panel 1", "panel 1 pressed")).into()),
+            LayerManager::new(vec![
+                layer_manager::Layer::new(
+                    rect(200., 200., 300., 300.), 
+                    button_test("manager layer 1", "manager layer 1 pressed")
+                ),
+                layer_manager::Layer::new(
+                    rect(220., 220., 300., 300.), 
+                    button_test("manager layer 2", "manager layer 2 pressed")
+                ),
+                layer_manager::Layer::new(
+                    rect(240., 240., 300., 300.), 
+                    button_test("manager layer 3", "manager layer 3 pressed")
+                ),
+            ]),
             text(&self.message)
         ].width(Length::Fill).height(Length::Fill).into()
         
