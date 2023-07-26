@@ -1,5 +1,5 @@
 
-use iced::{Sandbox, widget::{text, button, container, text_input}, Settings, Length, Rectangle, Point, Size, Element, Background, Color};
+use iced::{Sandbox, widget::{text, button, container, text_input, row, mouse_area}, Settings, Rectangle, Point, Size, Element, Background, Color, Renderer};
 use iced::widget::column;
 
 use crate::overlay_manager::*;
@@ -7,19 +7,32 @@ use crate::overlay_manager::*;
 mod overlay_manager;
 
 struct LayersApp {
-    message: String,
+    layers: Vec<LayerInfo>,
+    dragging: Option<(i16, Point)>,
+}
+
+struct LayerInfo {
+    order: i16,
+    top_left: Point,
+    text: String,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
-    SetMessage(String)
+    AddLayer,
+    CloseLayer(i16),
+    BringForward(i16),
+    SendBack(i16),
+    DragStart(i16),
+    DragStop,
+    SetText(i16, String)
 }
 
 impl Sandbox for LayersApp {
     type Message = Message;
 
     fn new() -> Self {
-        Self { message: "just started".to_string() }
+        Self { layers: Vec::new(), dragging: None }
     }
 
     fn title(&self) -> String {
@@ -28,45 +41,69 @@ impl Sandbox for LayersApp {
 
     fn update(&mut self, message: Self::Message) {
         match message {
-            Message::SetMessage(s) => self.message = s,
+            Message::AddLayer => {
+                let order = self.layers.last().map(|layer| layer.order).unwrap_or(0) + 1;
+                self.layers.push(LayerInfo { 
+                    order, 
+                    text: "new layer".to_string(), 
+                    top_left: Point::new((order * 50) as f32, (order * 50) as f32) });
+            },
+            Message::CloseLayer(order) => self.layers.retain(|layer| layer.order != order),
+            Message::BringForward(order) => {
+                let new_order = self.layers.last().map(|layer| layer.order).unwrap_or(0) + 1;
+                if new_order == order + 1 {
+                    return;
+                }
+                self.layers.iter_mut().for_each(|layer| if layer.order == order { layer.order = new_order; });
+                self.layers.sort_by_key(|layer| layer.order);
+            },
+            Message::SendBack(order) => {
+                let new_order = self.layers.first().map(|layer| layer.order).unwrap_or(1) - 1;
+                if new_order == order - 1 {
+                    return;
+                }
+                self.layers.iter_mut().for_each(|layer| if layer.order == order { layer.order = new_order; });
+                self.layers.sort_by_key(|layer| layer.order);
+            },
+            Message::DragStart(order) => {
+                let pos = self.layers.iter().find(|layer| layer.order == order).unwrap().top_left;
+                self.dragging = Some((order, pos))
+            },
+            Message::DragStop => self.dragging = None,
+            Message::SetText(order, text) => {
+                self.layers.iter_mut().for_each(|layer| if layer.order == order { layer.text = text.clone(); });
+            },
         }
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message> {
 
-        fn rect(x: f32, y: f32, width: f32, height: f32) -> Rectangle<f32> {
-            Rectangle::new(Point::new(x, y), Size::new(width, height))
+        fn as_layer(layer: &LayerInfo, dragging: Option<(i16, Point)>) -> Layer<Message, Renderer> {
+            let mut top_left = layer.top_left;
+            // if let Some((order, start)) = dragging {
+            //     if order == layer.order {
+            //         top_left = start 
+            //     }
+            // }
+            Layer::new(
+                Rectangle::new(top_left, Size::new(300., 300.)), 
+                border(column![
+                    row![
+                        button("^").width(30).height(30).on_press(Message::BringForward(layer.order)),
+                        button("v").width(30).height(30).on_press(Message::SendBack(layer.order)),
+                        button("x").width(30).height(30).on_press(Message::CloseLayer(layer.order)),
+                        mouse_area(border(text("drag here").into()))
+                            .on_press(Message::DragStart(layer.order)).on_release(Message::DragStop),
+                    ].spacing(10),
+                    text(&layer.text),
+                    text_input("change text", &layer.text).on_input(|s| Message::SetText(layer.order, s))
+                ].spacing(10).into()).into())
         }
 
         column![
-            OverlayManager::new(vec![
-                overlay_manager::Layer::new(
-                    rect(200., 200., 300., 300.), 
-                    border(column![
-                        text("some sample text"),
-                        text("on more than one line"),
-                        text("to see how it looks"),
-                    ].into()).into()
-                ),
-                overlay_manager::Layer::new(
-                    rect(220., 220., 300., 300.), 
-                    border(column![
-                        text("some text and inputs"),
-                        text_input("placeholder", &self.message),
-                        button("button").on_press(Message::SetMessage("layer 2 pressed".into()))
-                    ].into()).into()
-                ),
-                overlay_manager::Layer::new(
-                    rect(240., 240., 300., 300.), 
-                    border(column![
-                        text("final layer with"),
-                        text("yet another button"),
-                        button("button").on_press(Message::SetMessage("layer 3 pressed".into()))
-                    ].into()).into()
-                ),
-            ]),
-            text(&self.message)
-        ].width(Length::Fill).height(Length::Fill).into()
+            button("Add Layer").on_press_maybe(if self.layers.len() < 10 { Some(Message::AddLayer) } else { None }),
+            OverlayManager::new(self.layers.iter().map(|layer| as_layer(layer, self.dragging)).collect::<Vec<Layer<Message, Renderer>>>())
+        ].into()
         
     }
 }
