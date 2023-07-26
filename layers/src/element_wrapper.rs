@@ -43,7 +43,7 @@ where
         layout::Node::with_children(content_layout.size(), vec![content_layout])
     }
 
-    // needs to be implemented for content to work
+    // if content needs to react to events like mouse clicks etc, this needs to be implemented
     fn on_event(
         &mut self,
         tree: &mut Tree,
@@ -67,7 +67,7 @@ where
         )
     }
 
-    // needs to be implemented for content to work
+    // same as above
     fn mouse_interaction(
         &self,
         tree: &Tree,
@@ -114,8 +114,8 @@ where
     Message: Clone + 'a,
 {
     fn from(
-        column: ElementWrapper<'a, Message, Renderer>,
+        elem: ElementWrapper<'a, Message, Renderer>,
     ) -> Element<'a, Message, Renderer> {
-        Element::new(column)
+        Element::new(elem)
     }
 }

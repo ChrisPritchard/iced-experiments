@@ -98,3 +98,32 @@ in addition, and critically for the purpose of this widget, the following method
 - on_event
 - mouse_interaction
 - overlay
+
+children and diff are required if the element will contain other elements, while on_event and mouse_interaction are also needed if these child elements require them
+
+see ![./src/element_wrapper.rs](./src/element_wrapper.rs) for a complete example, basically replicating a container but almost no functionality beyond wrapping
+
+## Overlays
+
+The overlay function is special, and dictates that something can be drawn on top of this
+
+It requires that it return something that implements the Overlay trait, with the following methods requiring implementation:
+
+- layout
+- draw
+
+the layout method is used to position the content wherever, seemingly free from bounds
+
+there are more methods with default implementations as with basic widgets:
+
+- operate
+- on_event
+- mouse_interaction
+- is_over <- determines if the cursor is over the content, and by default just checks if within bounds
+- overlay <- for nested overlays
+
+## Overall composition
+
+A wrapper-like object that takes x, y, width, height
+The layout, draw, mouse interaction etc methods of this wrapper do nothing
+Its overlay returns an overlay component that implements the normal widget methods like a container would
