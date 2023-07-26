@@ -26,6 +26,24 @@ where
         tree.diff_children(std::slice::from_ref(&self.content))
     }
 
+    fn width(&self) -> Length {
+        Length::Shrink
+    }
+
+    fn height(&self) -> Length {
+        Length::Shrink
+    }
+
+    fn layout(
+        &self,
+        renderer: &Renderer,
+        limits: &layout::Limits,
+    ) -> layout::Node {
+        let content_layout = self.content.as_widget().layout(renderer, limits);
+        layout::Node::with_children(content_layout.size(), vec![content_layout])
+    }
+
+    // needs to be implemented for content to work
     fn on_event(
         &mut self,
         tree: &mut Tree,
@@ -49,6 +67,7 @@ where
         )
     }
 
+    // needs to be implemented for content to work
     fn mouse_interaction(
         &self,
         tree: &Tree,
@@ -66,33 +85,25 @@ where
         )
     }
 
-    fn width(&self) -> Length {
-        self.content.as_widget().width()
-    }
-
-    fn height(&self) -> Length {
-        self.content.as_widget().height()
-    }
-
-    fn layout(
-        &self,
-        renderer: &Renderer,
-        limits: &layout::Limits,
-    ) -> layout::Node {
-        self.content.as_widget().layout(renderer, limits)
-    }
-
     fn draw(
         &self,
-        state: &Tree,
+        tree: &Tree,
         renderer: &mut Renderer,
-        theme: &<Renderer as advanced::Renderer>::Theme,
-        style: &renderer::Style,
+        theme: &Renderer::Theme,
+        renderer_style: &renderer::Style,
         layout: Layout<'_>,
         cursor: mouse::Cursor,
         viewport: &Rectangle,
     ) {
-        self.content.as_widget().draw(state, renderer, theme, style, layout, cursor, viewport)
+        self.content.as_widget().draw(
+            &tree.children[0],
+            renderer,
+            theme,
+            renderer_style,
+            layout.children().next().unwrap(),
+            cursor,
+            viewport,
+        );
     }
 }
 
