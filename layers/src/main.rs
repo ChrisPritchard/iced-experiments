@@ -1,11 +1,30 @@
 use element_wrapper::ElementWrapper;
 
-use iced::{Sandbox, widget::{text, button}, Settings, Length, Rectangle, Point, Size};
+use iced::{Sandbox, widget::{text, button, container}, Settings, Length, Rectangle, Point, Size, Element, Background, Color};
 use iced::widget::column;
 use layer::Layer;
 
 mod layer;
 mod element_wrapper;
+
+pub fn border<T: 'static>(content: Element<T>) -> container::Container<T> {
+
+    let style = |theme: &iced::Theme| -> container::Appearance {
+        let palette = theme.extended_palette();
+        let bg_color = Color::WHITE;
+        container::Appearance {
+            border_width: 2.,
+            border_color: palette.primary.base.color,
+            background: Some(Background::Color(bg_color)),
+            ..Default::default()
+        }
+    } as for<'r> fn(&'r _) -> _;
+
+    iced::widget::container(content)
+        .padding(10)
+        .style(style)
+        .into()
+}
 
 struct LayersApp {
     message: String,
@@ -35,14 +54,22 @@ impl Sandbox for LayersApp {
 
     fn view(&self) -> iced::Element<'_, Self::Message> {
 
-        let wrapper_content = button(text("wrapper")).on_press(Message::SetMessage("wrapper pressed".to_string()));
-        let layer_content = button(text("layer")).on_press(Message::SetMessage("layer pressed".to_string())).into();
+        fn button_test(label: &str, on_pressed: &str) -> Element<'static, Message> {
+            button(text(label.to_string()).size(50)).on_press(Message::SetMessage(on_pressed.to_string())).into()
+        }
+
+        fn rect(x: f32, y: f32, width: f32, height: f32) -> Rectangle<f32> {
+            Rectangle::new(Point::new(x, y), Size::new(width, height))
+        }
 
         column![
-            ElementWrapper::new(wrapper_content.into()),
+            ElementWrapper::new(button_test("wrapper", "wrapper pressed")),
             Layer::new(
-                Rectangle::new(Point::new(100., 100.), Size::new(300., 300.)), 
-                layer_content),
+                rect(100., 100., 300., 300.), 
+                button_test("simple layer", "simple layer pressed")),
+            Layer::new(
+                rect(120., 120., 300., 300.), 
+                border(button_test("panel 1", "panel 1 pressed")).into()),
             text(&self.message)
         ].width(Length::Fill).height(Length::Fill).into()
         

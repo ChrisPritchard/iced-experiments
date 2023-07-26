@@ -64,7 +64,7 @@ where
             Box::new(LayerOverlay {
                 content: &mut self.content,
                 tree: &mut state.children[0],
-                size: self.rect.size(),
+                rect: self.rect,
             }),
         ))
     }
@@ -75,7 +75,7 @@ where
 struct LayerOverlay<'a, 'b, Message, Renderer> {
     content: &'b mut Element<'a, Message, Renderer>,
     tree: &'b mut widget::Tree,
-    size: Size,
+    rect: Rectangle<f32>,
 }
 
 impl<'a, 'b, Message, Renderer> overlay::Overlay<Message, Renderer>
@@ -90,14 +90,14 @@ where
         _bounds: Size,
         position: Point,
     ) -> layout::Node {
-        let limits = layout::Limits::new(Size::ZERO, self.size)
+        let limits = layout::Limits::new(Size::ZERO, self.rect.size())
             .width(Length::Fill)
             .height(Length::Fill);
 
         let mut child = self.content.as_widget().layout(renderer, &limits);
         child.align(Alignment::Center, Alignment::Center, limits.max());
 
-        let mut node = layout::Node::with_children(self.size, vec![child]);
+        let mut node = layout::Node::with_children(self.rect.size(), vec![child]);
         node.move_to(position);
 
         node
@@ -112,15 +112,41 @@ where
         clipboard: &mut dyn Clipboard,
         shell: &mut Shell<'_, Message>,
     ) -> event::Status {
-        self.content.as_widget_mut().on_event(
+        let evt = 
+            self.content.as_widget_mut().on_event(
+                self.tree,
+                event,
+                layout.children().next().unwrap(),
+                cursor,
+                renderer,
+                clipboard,
+                shell,
+                &layout.bounds(),
+            );
+        
+        if evt == event::Status::Ignored {
+            if !cursor.is_over(self.rect) {
+                return event::Status::Captured;
+            }
+        }
+
+        evt
+    }
+
+    
+    fn mouse_interaction(
+        &self,
+        layout: Layout<'_>,
+        cursor: mouse::Cursor,
+        viewport: &Rectangle,
+        renderer: &Renderer,
+    ) -> mouse::Interaction {
+        self.content.as_widget().mouse_interaction(
             self.tree,
-            event,
             layout.children().next().unwrap(),
             cursor,
+            viewport,
             renderer,
-            clipboard,
-            shell,
-            &layout.bounds(),
         )
     }
 
@@ -155,22 +181,6 @@ where
             renderer,
             operation,
         );
-    }
-
-    fn mouse_interaction(
-        &self,
-        layout: Layout<'_>,
-        cursor: mouse::Cursor,
-        viewport: &Rectangle,
-        renderer: &Renderer,
-    ) -> mouse::Interaction {
-        self.content.as_widget().mouse_interaction(
-            self.tree,
-            layout.children().next().unwrap(),
-            cursor,
-            viewport,
-            renderer,
-        )
     }
 
     fn overlay<'c>(
