@@ -1,5 +1,5 @@
 
-use iced::{Sandbox, widget::{text, button, container, text_input, row, mouse_area}, Settings, Rectangle, Point, Size, Element, Background, Color, Renderer};
+use iced::{widget::{text, button, container, text_input, row, mouse_area}, Settings, Rectangle, Point, Size, Element, Background, Color, Renderer, Application, Command, subscription, Subscription, Event, advanced::mouse, executor, Theme};
 use iced::widget::column;
 
 use crate::overlay_manager::*;
@@ -8,7 +8,7 @@ mod overlay_manager;
 
 struct LayersApp {
     layers: Vec<LayerInfo>,
-    dragging: Option<(i16, Point)>,
+    dragging: Option<(i16, Option<Point>)>,
 }
 
 struct LayerInfo {
@@ -25,21 +25,28 @@ enum Message {
     SendBack(i16),
     DragStart(i16),
     DragStop,
-    SetText(i16, String)
+    SetText(i16, String),
+    EventOccurred(Event),
 }
 
-impl Sandbox for LayersApp {
+impl Application for LayersApp {
     type Message = Message;
+    type Executor = executor::Default;
+    type Theme = Theme;
+    type Flags = ();
 
-    fn new() -> Self {
-        Self { layers: Vec::new(), dragging: None }
+    fn new(_flags: ()) -> (Self, Command<Message>) {
+        (
+            Self { layers: Vec::new(), dragging: None },
+            Command::none()
+        )
     }
 
     fn title(&self) -> String {
         "Layers App".into()
     }
 
-    fn update(&mut self, message: Self::Message) {
+    fn update(&mut self, message: Self::Message) -> Command<Message> {
         match message {
             Message::AddLayer => {
                 let order = self.layers.last().map(|layer| layer.order).unwrap_or(0) + 1;
@@ -52,7 +59,7 @@ impl Sandbox for LayersApp {
             Message::BringForward(order) => {
                 let new_order = self.layers.last().map(|layer| layer.order).unwrap_or(0) + 1;
                 if new_order == order + 1 {
-                    return;
+                    return Command::none();
                 }
                 self.layers.iter_mut().for_each(|layer| if layer.order == order { layer.order = new_order; });
                 self.layers.sort_by_key(|layer| layer.order);
@@ -60,33 +67,47 @@ impl Sandbox for LayersApp {
             Message::SendBack(order) => {
                 let new_order = self.layers.first().map(|layer| layer.order).unwrap_or(1) - 1;
                 if new_order == order - 1 {
-                    return;
+                    return Command::none();
                 }
                 self.layers.iter_mut().for_each(|layer| if layer.order == order { layer.order = new_order; });
                 self.layers.sort_by_key(|layer| layer.order);
             },
             Message::DragStart(order) => {
-                let pos = self.layers.iter().find(|layer| layer.order == order).unwrap().top_left;
-                self.dragging = Some((order, pos))
+                self.dragging = Some((order, None))
             },
             Message::DragStop => self.dragging = None,
             Message::SetText(order, text) => {
                 self.layers.iter_mut().for_each(|layer| if layer.order == order { layer.text = text.clone(); });
             },
+
+            Message::EventOccurred(evt) => {
+                if self.dragging.is_some() {
+                    if let Event::Mouse(em) = evt {
+                        if let mouse::Event::CursorMoved { position } = em {
+                            let (order, old_position) = self.dragging.unwrap();
+                            if old_position.is_some() {
+                                let old_position = old_position.unwrap();
+                                let diff = position - old_position;
+                                self.layers.iter_mut().for_each(|layer| if layer.order == order { layer.top_left = layer.top_left + diff; });
+                            }
+                            self.dragging = Some((order, Some(position)));
+                        }
+                    }
+                }
+            }
         }
+        Command::none()
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        subscription::events().map(Message::EventOccurred)
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message> {
 
-        fn as_layer(layer: &LayerInfo, dragging: Option<(i16, Point)>) -> Layer<Message, Renderer> {
-            let mut top_left = layer.top_left;
-            // if let Some((order, start)) = dragging {
-            //     if order == layer.order {
-            //         top_left = start 
-            //     }
-            // }
+        fn as_layer(layer: &LayerInfo) -> Layer<Message, Renderer> {
             Layer::new(
-                Rectangle::new(top_left, Size::new(300., 300.)), 
+                Rectangle::new(layer.top_left, Size::new(300., 300.)), 
                 border(column![
                     row![
                         button("^").width(30).height(30).on_press(Message::BringForward(layer.order)),
@@ -102,7 +123,7 @@ impl Sandbox for LayersApp {
 
         column![
             button("Add Layer").on_press_maybe(if self.layers.len() < 10 { Some(Message::AddLayer) } else { None }),
-            OverlayManager::new(self.layers.iter().map(|layer| as_layer(layer, self.dragging)).collect::<Vec<Layer<Message, Renderer>>>())
+            OverlayManager::new(self.layers.iter().map(|layer| as_layer(layer)).collect::<Vec<Layer<Message, Renderer>>>())
         ].into()
         
     }
