@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        ".\\svg-map\\Cargo.toml"
+    ]
+}

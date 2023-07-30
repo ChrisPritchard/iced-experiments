@@ -14,18 +14,11 @@ Exploring a new UI programming framework can be an exciting endeavor. Here are s
 
 3. [Calculator](./iced-calc/): Develop a simple calculator with a user-friendly interface. Implement basic arithmetic operations like addition, subtraction, multiplication, and division. You can also add additional functionalities like memory storage or scientific calculator features.
 
-4. Image Viewer: Create an application that allows users to browse and view images from a specific directory. Implement features such as zooming, panning, and basic image manipulation like rotation or cropping.
-
-5. Note-Taking App: Design a note-taking application where users can create, edit, and organize their notes. Include features like formatting text, adding images, and categorizing notes with tags or labels.
-
 6. [Currency Converter](./currency/): Develop a currency conversion application that fetches real-time exchange rates and allows users to convert between different currencies. Implement features like selecting the base currency, entering the amount to convert, and displaying the converted value.
 
-7. Recipe Finder: Build an application that fetches recipes from an API based on user preferences or search queries. Display recipe details, including ingredients, instructions, and nutritional information.
-
-8. Task Timer: Create a simple task timer application that helps users track their time spent on different activities or tasks. Include features like starting and stopping timers, displaying elapsed time, and logging completed tasks.
-
-9. Music Player: Design a basic music player that allows users to play, pause, and skip tracks. Implement features like a playlist, volume control, and displaying song metadata.
-
-10. Quiz or Flashcard App: Develop an application for creating and taking quizzes or flashcards. Users can input questions, possible answers, and check their answers for correctness.
-
 Remember to adapt these ideas to the specific features and capabilities of the UI programming framework you are exploring. Good luck with your project!
+
+## Other things
+
+- [Layers Widget](./layers/): a custom widget that allows overlaying components on top of each other, using nested ice overlays
+
