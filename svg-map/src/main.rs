@@ -25,7 +25,8 @@ impl Sandbox for WorldMap {
     fn view(&self) -> iced::Element<'_, Self::Message> {
         let handle = svg::Handle::from_memory(MAP_SVG_DATA);
         
-        svg(handle).width(Length::Fill).height(Length::Fill).into()
+        svg(handle).width(Length::Fill).height(Length::Fill)
+        .into()
     }
 }
 
