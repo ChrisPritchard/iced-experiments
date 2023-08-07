@@ -1,6 +1,7 @@
 use iced::{Sandbox, widget::{svg, column}, Length, Settings, Point};
 use map_point::MapPoint;
 
+mod map;
 mod map_point;
 
 const MAP_SVG_DATA: &[u8] = include_bytes!("../resources/world_map.svg");

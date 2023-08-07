@@ -10,3 +10,5 @@ The way this will likely work is by having a custom widget:
 each map_point is a custom widget that takes an x,y, maybe has some animation, and exposes on click etc
 
 the overlay for the custom widget renders a column of these map_points, so can be modelled after that sort of collection mechanic.
+
+perhaps develop an 'absolute container', like a column or a row but which takes an x,y,w,h like the overlay for each element, to render within itself.
