@@ -1,5 +1,11 @@
 # SVG Map
 
+**NOTE**: This project is unfinished, it just currently renders a SVG map (see below) - the intent was to overlay this with clickable icons, but it became a bit of a chore and contributed to my decision not to use iced for my side project; I am building a game, but iced seems (at present!) best for regular forms-like applications
+
+![](./svg-map.webp)
+
+## development notes
+
 A world map with points on it highlighted.
 
 The way this will likely work is by having a custom widget:

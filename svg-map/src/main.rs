@@ -1,7 +1,8 @@
-use iced::{Sandbox, widget::{svg, column}, Length, Settings, Point};
+use iced::{Sandbox, widget::{svg, column, text}, Length, Settings, Point, Rectangle, Size};
 use map_point::MapPoint;
 
-mod map;
+mod overlay_manager;
+mod absolute_container;
 mod map_point;
 
 const MAP_SVG_DATA: &[u8] = include_bytes!("../resources/world_map.svg");
@@ -27,15 +28,15 @@ impl Sandbox for WorldMap {
     }
 
     fn view(&self) -> iced::Element<'_, Self::Message> {
-        // let handle = svg::Handle::from_memory(MAP_SVG_DATA);
-        // svg(handle).width(Length::Fill).height(Length::Fill).into()
+        let handle = svg::Handle::from_memory(MAP_SVG_DATA);
+        svg(handle).width(Length::Fill).height(Length::Fill).into()
 
-        column![
-            MapPoint { point: Point::new(50., 50.) },
-            MapPoint { point: Point::new(100., 100.) },
-            MapPoint { point: Point::new(150., 150.) },
-            MapPoint { point: Point::new(200., 200.) },
-        ].width(Length::Fill).height(Length::Fill).into()
+        // absolute_container::AbsoluteContainer::new(vec![
+        //     (Rectangle::new(Point::new(10., 10.), Size::new(30., 30.)), text("1").into()),
+        //     (Rectangle::new(Point::new(100., 100.), Size::new(30., 30.)), text("2").into()),
+        //     (Rectangle::new(Point::new(300., 300.), Size::new(30., 30.)), text("3").into()),
+        //     (Rectangle::new(Point::new(350., 350.), Size::new(30., 30.)), text("4").into()),
+        // ]).width(Length::Fill).height(Length::Fill).into()
     }
 }
 
