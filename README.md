@@ -22,3 +22,6 @@ Remember to adapt these ideas to the specific features and capabilities of the U
 
 - [Layers Widget](./layers/): a custom widget that allows overlaying components on top of each other, using nested ice overlays
 
+- [SVG Map](./svg-map/): an unfinished attempt to have a svg world map with interactable points over top
+
+- [Legion](./legion/): combining an iced frontend/application with the [Legion](https://github.com/amethyst/legion) ECS framework
